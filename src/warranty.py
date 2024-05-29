@@ -3,7 +3,8 @@ from pathlib import Path
 from datetime import datetime, date
 from itertools import chain, batched
 import pandas as pd
-from selenium.webdriver import Firefox()
+import numpy as np
+from selenium.webdriver import Firefox
 from selenium.common import NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -11,6 +12,30 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 WARRANTY_URL = "https://support.hp.com/us-en/check-warranty#multiple"
 
+
+def products_read():
+    """
+    Read products from hp_products.csv.
+    Drops any entries missing either serial number or
+    product number.
+    Returns a pandas dataframe.
+    """
+    columns = [
+        "serial_number",
+        "product_number",
+    ]
+    info_cols = [
+        "warranty_start",
+        "warranty_end",
+        "url",
+    ]
+    products_data = "hp_products.csv"
+    df = pd.read_csv(products_data)
+    if not np.array_equal(df.columns, columns):
+        raise ValueError(f"The columns {columns} are required!")
+    df = df.dropna()
+    df[info_cols] = None
+    return df
 
 
 def initialize_browser():
@@ -33,3 +58,15 @@ def initialize_browser():
     )
     time.sleep(2)  # Wait for cookie prompt to dissapear.
     return driver
+
+
+def hp_warranty_get():
+    """
+    Retreive warranties for HP computers from hp warranty page.
+    """
+    driver = initialize_browser()
+    driver.quit()
+
+
+if __name__ == "__main__":
+    load()
