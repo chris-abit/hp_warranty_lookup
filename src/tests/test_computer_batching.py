@@ -1,3 +1,4 @@
+import pytest
 import pandas as pd
 import numpy as np
 from utility import computers_batched
@@ -28,3 +29,35 @@ def test_computers_batched_small_batch_is_not_padded():
     for expected, result in zip(expected_batches, result_batches):
         assert expected.equals(result)
     assert len(result_batches) == 1
+
+
+def test_computers_batched_two_in_last_batch_is_valid():
+    max_items = 15 + 2
+    computers = list(range(max_items))
+    df = pd.DataFrame(computers)
+    first = df[0:15]
+    second = df[15:17]
+    expected_batches = [first, second]
+    result_batches = computers_batched(df)
+    for expected, result in zip(expected_batches, result_batches):
+        assert expected.equals(result)
+
+
+def test_computers_batched_raises_value_error_on_single_entry():
+    max_items = 1
+    computers = list(range(max_items))
+    df = pd.DataFrame(computers)
+    with pytest.raises(ValueError):
+        computers_batched(df)
+
+
+def test_computers_batched_handles_max_length_batches():
+    max_items = 15 * 2
+    computers = list(range(max_items))
+    df = pd.DataFrame(computers)
+    first = df[:15]
+    second = df[15:]
+    expected_batches = [first, second]
+    result_batches = computers_batched(df)
+    for expected, result in zip(expected_batches, result_batches):
+        assert expected.equals(result)
