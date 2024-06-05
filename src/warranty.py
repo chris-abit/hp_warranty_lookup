@@ -8,6 +8,7 @@ from selenium.webdriver import Firefox
 from selenium.common import NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from utility import computers_batched, write_results
 
 
 WARRANTY_URL = "https://support.hp.com/us-en/check-warranty#multiple"
@@ -60,13 +61,64 @@ def initialize_browser():
     return driver
 
 
+def send_keys(driver, row, elem_name, elem_input):
+    """
+    Locates a element determined by row[elem_name] and
+    sends the keys from row[elem_input].
+    driver: Which driver.
+    row: Row in dataframe.
+    elem_name: Name of element to input data into.
+    elem_input: Source for element input data.
+    """
+    elem = driver.find_element(By.ID, row[elem_name])
+    elem.send_keys(row[elem_input])
+
+
+def serial_numbers_send(driver, computers):
+    """
+    Fill serial numbers into hp warranty lookup page.
+    """
+    submit = driver.find_element(By.ID, "FindMyProduct")
+    sn_field = "inputtextpfinder"
+    sn_fields = [f"{sn_field}{i}" for i in range(1, len(computers))]
+    sn_fields.insert(0, sn_field)
+    computers["sn_field"] = sn_fields
+    func = lambda x: send_keys(driver, "sn_field", "serial_number")
+    computers.apply(func)
+    submit.click()
+
+
+def product_numbers_send(driver, computers):
+    """
+    Fill product numbers into hp warranty lookup page.
+    """
+    submit = driver.find_element(By.ID, "FindMyProductNumber-multiple")
+    max_items = len(computers) + 1
+    pn_field = "product-number inputtextPN"
+    pn_fields = [f"{pn_field}{i}" for i in range(1, max_items)]
+    computers["pn_field"] = pn_fields
+    computers = computers[computers["pn_field"] in driver.page_source]
+    func = lambda x: send_keys(driver, x, "pn_field", "product_number")
+    computers.apply(func)
+    submit.click()
+
+
 def hp_warranty_get():
     """
     Retreive warranties for HP computers from hp warranty page.
     """
+    output = "hp_warranty_result.csv"
     driver = initialize_browser()
+    computers = products_read()
+    batched_computers = computers_batched(computers)
+    file_create = True
+    print(f"Starting warranty lookup of {len(computers)}")
+    for computers in batched_computers:
+        df = products_get(driver, computers)
+        write_results(output, df, file_create)
+        file_create = False
     driver.quit()
 
 
 if __name__ == "__main__":
-    load()
+    warranty = HPWarrantyLookup()
