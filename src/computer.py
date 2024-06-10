@@ -25,6 +25,18 @@ class Computer:
         time = datetime.strptime(tmp.text, dateformat)
         return time.date()
 
+    def url_set(self, urls):
+        """
+        Gets the computer url from urls.
+        Will append the product number if it is missing.
+        """
+        urls = filter(lambda x: self.serial_number in x, urls)
+        url = list(urls).pop()
+        product_number = self.product_number
+        if product_number not in url:
+            url = f"{url}&sku={product_number}"
+        self.url = url
+
     def warranty_get(self, driver):
         """
         Get the warranty for a computer.
