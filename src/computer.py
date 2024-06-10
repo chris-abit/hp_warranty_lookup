@@ -5,6 +5,53 @@ from selenium.webdriver.common.by import By
 from utility import wait_for_load
 
 
+def products_read(fname="hp_products.csv"):
+    """
+    Read products from hp_products.csv.
+    Drops any entries missing either serial number or
+    product number.
+    Returns a list of computers.
+    """
+    columns = [
+        "serial_number",
+        "product_number",
+    ]
+    df = pd.read_csv(fname, dtype=object)
+    if not np.array_equal(df.columns, columns):
+        raise ValueError(f"The columns {columns} are required!")
+    df = df.dropna()
+    func = lambda x: Computer(x["serial_number"], x["product_number"])
+    computers = list(df.apply(func, axis=1))
+    return computers
+
+
+def computers_save(computers, fname="hp_warranty_info.csv", append=False):
+    """
+    Save computer info to a csv file.
+    Will append computers to file if append is True.
+    """
+    d_computers = {
+        "serial_number": [],
+        "product_number": [],
+        "warranty_start": [],
+        "warranty_end": [],
+        "url": [],
+        "error": [],
+    }
+    for computer in computers:
+        d_computers["serial_number"].append(computer.serial_number)
+        d_computers["product_number"].append(computer.product_number)
+        d_computers["warranty_start"].append(computer.warranty_start)
+        d_computers["warranty_end"].append(computer.warranty_end)
+        d_computers["url"].append(computer.url)
+        d_computers["error"].append(computer.error)
+    df = pd.DataFrame(d_computers)
+    if append:
+        df.to_csv(fname, index=False, header=False, mode="a")
+    else:
+        df.to_csv(fname, index=False)
+
+
 class Computer:
     def __init__(self, serial_number, product_number):
         self.serial_number = serial_number
