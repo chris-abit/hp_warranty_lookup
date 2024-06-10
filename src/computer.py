@@ -59,3 +59,20 @@ class Computer:
             raise ValueError(f"Warranty was not found in current page: {url}")
         self.warranty_start = warranty_start
         self.warranty_end = warranty_end
+
+    def write_info(self, driver, target, source="serial"):
+        """
+        Write information from computer into a web element.
+        driver: Which webdriver.
+        target: Which element to send info to.
+        source: Which data to read, serial or product number.
+        """
+        elem = driver.find_element(By.ID, target)
+        data = ""
+        if source == "serial":
+            data = self.serial_number
+        elif source == "product":
+            data = self.product_number
+        else:
+            raise ValueError("Only serial or product is valid source.")
+        elem.send_keys(data)
