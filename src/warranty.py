@@ -8,35 +8,10 @@ from selenium.webdriver import Firefox
 from selenium.common import NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from utility import computers_batched, write_results
-
+from utility import wait_for_load
+from computer import Computer, computers_read, computers_save, computers_batched
 
 WARRANTY_URL = "https://support.hp.com/us-en/check-warranty#multiple"
-
-
-def products_read():
-    """
-    Read products from hp_products.csv.
-    Drops any entries missing either serial number or
-    product number.
-    Returns a pandas dataframe.
-    """
-    columns = [
-        "serial_number",
-        "product_number",
-    ]
-    info_cols = [
-        "warranty_start",
-        "warranty_end",
-        "url",
-    ]
-    products_data = "hp_products.csv"
-    df = pd.read_csv(products_data)
-    if not np.array_equal(df.columns, columns):
-        raise ValueError(f"The columns {columns} are required!")
-    df = df.dropna()
-    df[info_cols] = None
-    return df
 
 
 def initialize_browser():
@@ -61,32 +36,6 @@ def initialize_browser():
     return driver
 
 
-def send_keys(driver, row, elem_name, elem_input):
-    """
-    Locates a element determined by row[elem_name] and
-    sends the keys from row[elem_input].
-    driver: Which driver.
-    row: Row in dataframe.
-    elem_name: Name of element to input data into.
-    elem_input: Source for element input data.
-    """
-    elem = driver.find_element(By.ID, row[elem_name])
-    elem.send_keys(row[elem_input])
-
-
-def serial_numbers_send(driver, computers):
-    """
-    Fill serial numbers into hp warranty lookup page.
-    """
-    sn_field = "inputtextpfinder"
-    sn_fields = [f"{sn_field}{i}" for i in range(1, len(computers))]
-    sn_fields.insert(0, sn_field)
-    computers["sn_field"] = sn_fields
-    func = lambda x: send_keys(driver, x, "sn_field", "serial_number")
-    computers.apply(func, axis=1)
-    submit_form(driver)
-
-
 def submit_form(driver):
     """
     Submit hp warranty lookup form.
@@ -108,21 +57,6 @@ def submit_form(driver):
     elem.click()
 
 
-def product_numbers_send(driver, computers):
-    """
-    Fill product numbers into hp warranty lookup page.
-    """
-    max_items = len(computers) + 1
-    pn_field = "product-number inputtextPN"
-    pn_fields = [f"{pn_field}{i}" for i in range(1, max_items)]
-    computers["pn_field"] = pn_fields
-    pn_fields = filter(lambda x: x in driver.page_source, pn_fields)
-    missing = computers[computers["pn_field"].isin(pn_fields)]
-    func = lambda x: send_keys(driver, x, "pn_field", "product_number")
-    missing.apply(func, axis=1)
-    submit_form(driver)
-
-
 def urls_find(driver, field_name, n_fields):
     """
     Find the urls for computers in hp result page.
@@ -135,21 +69,6 @@ def urls_find(driver, field_name, n_fields):
     return urls
 
 
-def set_url(row, sn_urls):
-    serial_number = row["serial_number"]
-    url = sn_urls[serial_number]
-    row["url"] = url
-    return row
-
-
-def append_missing_product_number_to_url(row):
-    url = row["url"]
-    product_number = row["product_number"]
-    if product_number not in url:
-        row["url"] = f"{url}&sgu={product_number}"
-    return row
-
-
 def computer_urls_get(driver, computers):
     """
     Retreive urls for each computer.
@@ -158,23 +77,23 @@ def computer_urls_get(driver, computers):
     urls_det = urls_find(driver, "Viewdetails", n_items)
     urls_opt = urls_find(driver, "ViewOptions", n_items)
     urls = list(chain(urls_opt, urls_det))
-    sn_urls = {}
-    for url in urls:
-        serial_number = url.split("serialnumber=")[1]
-        sn_urls[serial_number] = url
-    computers = computers.apply(lambda x: set_url(x, sn_urls), axis=1)
-    computers = computers.apply(append_missing_product_number_to_url, axis=1)
+    for computer in computers:
+        computer.url_set(urls)
     return computers
 
 
-def query_clear(driver):
+def query_clear(driver, n_items):
     """
     Clears hp warranty entries such that information can be entred.
     Silly workaround, that abuses that clicking "Single product" clears
     results.
+    Will add n fields using the add item button.
     """
     driver.find_element(By.ID, "SingleProduct").click()
     driver.find_element(By.ID, "MultipleProduct").click()
+    add_item = driver.find_element(By.ID, "AddItem")
+    for _ in range(n_items - 2):
+        add_item.click()
 
 
 def wait_for_errors_or_success(driver, timeout=300):
@@ -198,23 +117,64 @@ def wait_for_errors_or_success(driver, timeout=300):
     raise ValueError("Unexpected result in page.")
 
 
+def computers_form_fill_and_submit(driver, computers, targets, source):
+    """
+    Locate valid fields for filling hp computer info.
+    Then write info in those fields and submit the form.
+    """
+    for computer, target in zip(computers, targets):
+        elem_txt = f'"{target}"'
+        if elem_txt in driver.page_source:
+            computer.write_info(driver, target, source)
+    submit_form(driver)
+
+
+def handle_errors(driver, computers, sn_fields):
+    """
+    Detect errors in serial number fields. Removing them
+    from the list of computers and setting an error of invalid serial number.
+    This relies on that the serial number field has a error class 'is-invalid'.
+    Rather than handling manually removing fields the query is cleared.
+    """
+    error_class = "is-invalid"
+    for computer, field in zip(computers, sn_fields):
+        f_class = driver.find_element(By.ID, field).get_attribute("class")
+        if error_class in f_class:
+            computer.error = "Invalid serial number."
+    invalid_computers = list(filter(lambda x: x.error != "", computers))
+    computers = list(filter(lambda x: x.error == "", computers))
+    query_clear(driver, len(computers))
+    print(f"{invalid_computers=}")
+    return [computers, invalid_computers]
+
+
 def products_get(driver, computers):
     """
     """
     wait = WebDriverWait(driver, timeout=120)
     n_items = len(computers)
+    sn_field = "inputtextpfinder"
+    sn_fields = [f"{sn_field}{i}" for i in range(1, n_items)]
+    sn_fields.insert(0, sn_field)
+    pn_field = "product-number inputtextPN"
+    pn_fields = [f"{pn_field}{i}" for i in range(1, n_items + 1)]
 
     driver.get(WARRANTY_URL)
-    query_clear(driver)
-    add_item = driver.find_element(By.ID, "AddItem")
-    for _ in range(n_items - 2):
-        add_item.click()
-    serial_numbers_send(driver, computers)
+    query_clear(driver, n_items)
+    computers_form_fill_and_submit(driver, computers, sn_fields, "serial")
     success = wait_for_errors_or_success(driver)
+    computers, errors = handle_errors(driver, computers, sn_fields)
+    if errors:
+        # Rather than manually clearing fields, reinput valid serial numbers.
+        computers_form_fill_and_submit(driver, computers, sn_fields, "serial")
+        success = wait_for_errors_or_success(driver)
     if not success:
-        product_numbers_send(driver, computers)
+        computers_form_fill_and_submit(driver, computers, pn_fields, "product")
         wait_for_errors_or_success(driver)
     computers = computer_urls_get(driver, computers)
+    for computer in computers:
+        computer.warranty_get(driver)
+    computers.extend(errors)
     return computers
 
 
@@ -224,16 +184,17 @@ def hp_warranty_get():
     """
     output = "hp_warranty_result.csv"
     driver = initialize_browser()
-    computers = products_read()
+    computers = computers_read()
+    print(computers)
     batched_computers = computers_batched(computers)
-    file_create = True
+    is_append = False
     print(f"Starting warranty lookup of {len(computers)}")
     for computers in batched_computers:
-        df = products_get(driver, computers)
-        write_results(output, df, file_create)
-        file_create = False
+        products_get(driver, computers)
+        computers_save(computers, output, append=is_append)
+        is_append = True
     driver.quit()
 
 
 if __name__ == "__main__":
-    hp_warranty_get()
+    driver = hp_warranty_get()
