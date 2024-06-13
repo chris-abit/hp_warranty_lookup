@@ -143,8 +143,8 @@ def handle_errors(driver, computers, sn_fields):
             computer.error = "Invalid serial number."
     invalid_computers = list(filter(lambda x: x.error != "", computers))
     computers = list(filter(lambda x: x.error == "", computers))
-    query_clear(driver, len(computers))
-    print(f"{invalid_computers=}")
+    if invalid_computers:
+        query_clear(driver, len(computers))
     return [computers, invalid_computers]
 
 
@@ -185,7 +185,6 @@ def hp_warranty_get():
     output = "hp_warranty_result.csv"
     driver = initialize_browser()
     computers = computers_read()
-    print(computers)
     batched_computers = computers_batched(computers)
     is_append = False
     print(f"Starting warranty lookup of {len(computers)}")
