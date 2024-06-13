@@ -1,9 +1,8 @@
 import time
 from pathlib import Path
 from datetime import datetime, date
-from itertools import chain, batched
+from itertools import chain
 import pandas as pd
-import numpy as np
 from selenium.webdriver import Firefox
 from selenium.common import NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.common.by import By
