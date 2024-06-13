@@ -1,5 +1,6 @@
+import time
 from itertools import batched
-from datetime import date
+from datetime import datetime, date
 import pandas as pd
 import numpy as np
 from selenium.webdriver.common.by import By
@@ -63,11 +64,12 @@ def computers_batched(computers):
     n_items = len(computers)
     if n_items < 2:
         raise ValueError("A minimum of two computers is required.")
-    batches = list(batched(computers, max_items))
+    batches = map(list, batched(computers, max_items))
+    batches = list(batches)
     if n_items % max_items == 1:
         last_batch = batches.pop()
         second_last = batches.pop()
-        last_batch.insert(second_last.pop(), 0)
+        last_batch.insert(0, second_last.pop())
         batches.extend([second_last, last_batch])
     return batches
 
@@ -81,7 +83,7 @@ class Computer:
         self.url = ""
         self.error = ""
 
-    def _date_read(element):
+    def _date_read(self, element):
         """
         Read a date from a element on the page.
         Returns a date.
@@ -104,6 +106,21 @@ class Computer:
             url = f"{url}&sku={product_number}"
         self.url = url
 
+    def _wait_for_warranty(self, driver):
+        """
+        Wait for warranty information to load.
+        This is to cover cases where the page "finishes" a load
+        but warranty information is not yet present.
+        """
+        timeout = 5
+        poll_intervall = 0.5
+        endtime = time.time() + timeout
+        while time.time() < endtime:
+            time.sleep(poll_intervall)
+            if "Coverage type" in driver.page_source:
+                return True
+        return False
+
     def warranty_get(self, driver):
         """
         Get the warranty for a computer.
@@ -115,6 +132,7 @@ class Computer:
         if not is_loaded:
             self.error = "Timeout"
             return
+        self._wait_for_warranty(driver)
         elements = driver.find_elements(By.CLASS_NAME, "label")
         for element in elements:
             if element.text == "Start date":
@@ -143,3 +161,6 @@ class Computer:
         else:
             raise ValueError("Only serial or product is valid source.")
         elem.send_keys(data)
+
+    def __repr__(self):
+        return f"{self.serial_number}, {self.product_number}"
