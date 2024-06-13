@@ -186,12 +186,13 @@ def hp_warranty_get():
     computers = computers_read()
     batched_computers = computers_batched(computers)
     is_append = False
-    print(f"Starting warranty lookup of {len(computers)}")
+    print(f"Starting warranty lookup of {len(computers)} computers.")
     for computers in batched_computers:
         products_get(driver, computers)
         computers_save(computers, output, append=is_append)
         is_append = True
     driver.quit()
+    print("Done.")
 
 
 if __name__ == "__main__":
