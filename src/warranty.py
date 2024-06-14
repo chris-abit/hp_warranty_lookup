@@ -181,6 +181,7 @@ def hp_warranty_get():
     """
     Retreive warranties for HP computers from hp warranty page.
     """
+    start = time.time()
     output = "hp_warranty_result.csv"
     driver = initialize_browser()
     computers = computers_read()
@@ -192,8 +193,9 @@ def hp_warranty_get():
         computers_save(computers, output, append=is_append)
         is_append = True
     driver.quit()
-    print("Done.")
+    elapsed_time = time.time() - start
+    print(f"Done. Process took {elapsed_time} s")
 
 
 if __name__ == "__main__":
-    driver = hp_warranty_get()
+    hp_warranty_get()
