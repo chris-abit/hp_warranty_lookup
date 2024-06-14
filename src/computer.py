@@ -124,6 +124,8 @@ class Computer:
     def warranty_get(self, driver):
         """
         Get the warranty for a computer.
+        Depends on the fact that the Hardware maintenance warranty
+        is the first warranty present.
         """
         warranty_start = None
         warranty_end = None
@@ -135,9 +137,9 @@ class Computer:
         self._wait_for_warranty(driver)
         elements = driver.find_elements(By.CLASS_NAME, "label")
         for element in elements:
-            if element.text == "Start date":
+            if element.text == "Start date" and warranty_start == None:
                 warranty_start = self._date_read(element)
-            if element.text == "End date":
+            if element.text == "End date" and warranty_end == None:
                 warranty_end = self._date_read(element)
         if warranty_start == None or warranty_end == None:
             url = driver.current_url
