@@ -111,7 +111,7 @@ class Computer:
             "authState": "anonymous",
             "template": "checkWarranty",
         }
-        r = requests.get(url, headers=headers, params=params)
+        r = requests.get(url, headers=headers, params=params, timeout=5)
         data = r.json().get("data").get("verifyResponse").get("data")
         product_series = data.get("productSeriesOID")
         target_url = data.get("targetUrl")
@@ -119,18 +119,6 @@ class Computer:
         target_url = f"{warranty_url}{target_url}"
         target_url = target_url.replace("/model/", f"/{product_series}/model/")
         self.url = target_url
-
-    def url_set(self, urls):
-        """
-        Gets the computer url from urls.
-        Will append the product number if it is missing.
-        """
-        urls = filter(lambda x: self.serial_number in x, urls)
-        url = list(urls).pop()
-        product_number = self.product_number
-        if product_number not in url:
-            url = f"{url}&sku={product_number}"
-        self.url = url
 
     def _wait_for_warranty(self, driver):
         """
