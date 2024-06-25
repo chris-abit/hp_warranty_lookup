@@ -1,6 +1,7 @@
 import time
 from itertools import batched
 from datetime import datetime, date
+import requests
 import pandas as pd
 import numpy as np
 from selenium.webdriver.common.by import By
@@ -93,6 +94,31 @@ class Computer:
         tmp = tmp.find_element(By.CLASS_NAME, "text")
         time = datetime.strptime(tmp.text, dateformat)
         return time.date()
+
+    def url_get(self):
+        """
+        Use requests to obtain the url for the computer warranty page.
+        """
+        warranty_url = "https://support.hp.com/us-en/warrantyresult/"
+        headers = {
+            "Referer": "https://support.hp.com/us-en/check-warranty",
+        }
+        url = "https://support.hp.com/wcc-services/searchresult/us-en"
+        params = {
+            "q": computer.serial_number,
+            "productNumber": computer.product_number,
+            "context": "pdp",
+            "authState": "anonymous",
+            "template": "checkWarranty",
+        }
+        r = requests.get(url, headers=headers, params=params)
+        data = r.json().get("data").get("verifyResponse").get("data")
+        product_series = data.get("productSeriesOID")
+        target_url = data.get("targetUrl")
+        target_url = target_url.strip("/product/details/")
+        target_url = f"{warranty_url}{target_url}"
+        target_url = target_url.replace("/model/", f"/{product_series}/model/")
+        self.url = target_url
 
     def url_set(self, urls):
         """
