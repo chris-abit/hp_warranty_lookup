@@ -119,8 +119,8 @@ class Computer:
         }
         url = "https://support.hp.com/wcc-services/searchresult/us-en"
         params = {
-            "q": computer.serial_number,
-            "productNumber": computer.product_number,
+            "q": self.serial_number,
+            "productNumber": self.product_number,
             "context": "pdp",
             "authState": "anonymous",
             "template": "checkWarranty",
