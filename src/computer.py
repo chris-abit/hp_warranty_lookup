@@ -95,6 +95,20 @@ class Computer:
         time = datetime.strptime(tmp.text, dateformat)
         return time.date()
 
+    def _url_get_error_handle(self, response):
+        """
+        Handle any errors obtaining a url to a computer warranty page
+        from HP.
+        Takes a naive approach, assuming that the error message provided by
+        HP is sufficient.
+        """
+        data = response.json().get("data").get("verifyResponse")
+        status_code = data.get("code")
+        if status_code != requests.codes.ok:
+            self.error = data.get("message")
+            return True
+        return False
+
     def url_get(self):
         """
         Use requests to obtain the url for the computer warranty page.
@@ -112,6 +126,9 @@ class Computer:
             "template": "checkWarranty",
         }
         r = requests.get(url, headers=headers, params=params, timeout=5)
+        error = self._url_get_error_handle(r)
+        if error:
+            return
         data = r.json().get("data").get("verifyResponse").get("data")
         product_series = data.get("productSeriesOID")
         target_url = data.get("targetUrl")
