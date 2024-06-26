@@ -9,10 +9,9 @@ from utility import wait_for_load
 
 
 def computers_read(fname="hp_products.csv"):
-    """
-    Read computers from hp_products.csv.
-    Drops any entries missing either serial number or
-    product number.
+    """ Read computers from csv file.
+
+    Drops any entries missing the serial number.
     Returns a list of computers.
     """
     columns = [
@@ -29,8 +28,8 @@ def computers_read(fname="hp_products.csv"):
 
 
 def computers_save(computers, fname="hp_warranty_info.csv", append=False):
-    """
-    Save computer info to a csv file.
+    """ Save computer info to a csv file.
+
     Will append computers to file if append is True.
     """
     computers = map(vars, computers)
@@ -42,8 +41,7 @@ def computers_save(computers, fname="hp_warranty_info.csv", append=False):
 
 
 class Computer:
-    """
-    A class representing a HP computer.
+    """ A class representing a HP computer.
     """
     def __init__(self, serial_number, product_number):
         self.serial_number = serial_number
@@ -54,8 +52,7 @@ class Computer:
         self.error = ""
 
     def _date_read(self, element):
-        """
-        Read a date from a element on the page.
+        """ Read a date from a element on the page.
         Returns a date.
         """
         dateformat = "%B %d, %Y"
@@ -65,11 +62,11 @@ class Computer:
         return time.date()
 
     def _url_get_error_handle(self, response):
-        """
-        Handle any errors obtaining a url to a computer warranty page
-        from HP.
-        Takes a naive approach, assuming that the error message provided by
-        HP is sufficient.
+        """ Handle any errors obtaining a url.
+
+        Handles any errors obtaining a url to a computer warranty page
+        from HP. Takes a naive approach, assuming that the error
+        message provided by HP is sufficient.
         """
         data = response.json().get("data").get("verifyResponse")
         status_code = data.get("code")
@@ -79,8 +76,8 @@ class Computer:
         return False
 
     def url_get(self):
-        """
-        Use requests to obtain the url for the computer warranty page.
+        """ Use requests to obtain the url for the computer warranty page.
+
         Returns self to be friendly for map function.
         """
         warranty_url = "https://support.hp.com/us-en/warrantyresult/"
@@ -109,8 +106,8 @@ class Computer:
         return self
 
     def _wait_for_warranty(self, driver):
-        """
-        Wait for warranty information to load.
+        """ Wait for warranty information to load.
+
         This is to cover cases where the page "finishes" a load
         but warranty information is not yet present.
         """
@@ -124,8 +121,8 @@ class Computer:
         return False
 
     def warranty_get(self, driver):
-        """
-        Get the warranty for a computer.
+        """ Get the warranty for a computer.
+
         Depends on the fact that the Hardware maintenance warranty
         is the first warranty present.
         """
@@ -150,4 +147,5 @@ class Computer:
         self.warranty_end = warranty_end
 
     def __repr__(self):
+        """ Return a string containing computer serial and product number."""
         return f"{self.serial_number}, {self.product_number}"
