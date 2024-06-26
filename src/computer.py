@@ -33,22 +33,8 @@ def computers_save(computers, fname="hp_warranty_info.csv", append=False):
     Save computer info to a csv file.
     Will append computers to file if append is True.
     """
-    d_computers = {
-        "serial_number": [],
-        "product_number": [],
-        "warranty_start": [],
-        "warranty_end": [],
-        "url": [],
-        "error": [],
-    }
-    for computer in computers:
-        d_computers["serial_number"].append(computer.serial_number)
-        d_computers["product_number"].append(computer.product_number)
-        d_computers["warranty_start"].append(computer.warranty_start)
-        d_computers["warranty_end"].append(computer.warranty_end)
-        d_computers["url"].append(computer.url)
-        d_computers["error"].append(computer.error)
-    df = pd.DataFrame(d_computers)
+    computers = map(vars, computers)
+    df = pd.DataFrame(computers)
     if append:
         df.to_csv(fname, index=False, header=False, mode="a")
     else:
