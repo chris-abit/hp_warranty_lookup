@@ -38,6 +38,7 @@ def batch_warranty_get(driver, computers):
     Get warranties for computers in batch.
     Will filter out any with errors.
     """
+    computers = map(lambda x: x.url_get(), computers)
     computers = filter(lambda x: x.error == "", computers)
     for computer in computers:
         computer.warranty_get(driver)
@@ -54,7 +55,6 @@ def hp_warranty_get():
     batched_computers = computers_batched(computers)
     is_append = False
     print(f"Starting warranty lookup of {len(computers)} computers.")
-    [c.url_get() for c in computers]
     for computers in batched_computers:
         batch_warranty_get(driver, computers)
         computers_save(computers, output, append=is_append)
