@@ -41,26 +41,6 @@ def computers_save(computers, fname="hp_warranty_info.csv", append=False):
         df.to_csv(fname, index=False)
 
 
-def computers_batched(computers):
-    """
-    Creates batches of computers.
-    Guarantees that the last batch is atleast two computers, such
-    that hp warranty lookup of a batch is possible.
-    """
-    max_items = 15
-    n_items = len(computers)
-    if n_items < 2:
-        raise ValueError("A minimum of two computers is required.")
-    batches = map(list, batched(computers, max_items))
-    batches = list(batches)
-    if n_items % max_items == 1:
-        last_batch = batches.pop()
-        second_last = batches.pop()
-        last_batch.insert(0, second_last.pop())
-        batches.extend([second_last, last_batch])
-    return batches
-
-
 class Computer:
     """
     A class representing a HP computer.

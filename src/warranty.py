@@ -1,4 +1,5 @@
 import time
+from itertools import batched
 from pathlib import Path
 from datetime import datetime, date
 from selenium.webdriver import Firefox
@@ -50,9 +51,10 @@ def hp_warranty_get():
     """
     start = time.time()
     output = "hp_warranty_result.csv"
+    batch_size = 15
     driver = initialize_browser()
     computers = computers_read()
-    batched_computers = computers_batched(computers)
+    batched_computers = batched(computers, batch_size)
     is_append = False
     print(f"Starting warranty lookup of {len(computers)} computers.")
     for computers in batched_computers:
