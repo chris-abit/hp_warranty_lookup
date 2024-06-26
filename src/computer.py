@@ -22,6 +22,7 @@ def computers_read(fname="hp_products.csv"):
     if not np.array_equal(df.columns, columns):
         raise ValueError(f"The columns {columns} are required!")
     df = df.dropna(subset=columns[0])
+    df = df.fillna("")
     func = lambda x: Computer(x["serial_number"], x["product_number"])
     computers = list(df.apply(func, axis=1))
     return computers
