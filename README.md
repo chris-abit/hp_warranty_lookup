@@ -1,5 +1,6 @@
 A basic tool for looking up warranty information for HP computers.
-Serial number and product numbers are required. This information has to be available
+Serial numbers are required. Product numbers are optional, but recommended.
+As some HP computers need this. This information has to be available
 in hp_products.csv.
 Example:
 ```
