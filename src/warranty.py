@@ -6,7 +6,7 @@ from selenium.webdriver import Firefox
 from selenium.common import NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from computer import Computer, computers_read, computers_save, computers_batched
+from computer import Computer, computers_read, computers_save
 
 
 WARRANTY_URL = "https://support.hp.com/us-en/check-warranty#multiple"
