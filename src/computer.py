@@ -22,7 +22,7 @@ def computers_read(fname="hp_products.csv"):
     df = pd.read_csv(fname, dtype=object)
     if not np.array_equal(df.columns, columns):
         raise ValueError(f"The columns {columns} are required!")
-    df = df.dropna()
+    df = df.dropna(subset=colums[0])
     func = lambda x: Computer(x["serial_number"], x["product_number"])
     computers = list(df.apply(func, axis=1))
     return computers
@@ -76,6 +76,9 @@ def computers_batched(computers):
 
 
 class Computer:
+    """
+    A class representing a HP computer.
+    """
     def __init__(self, serial_number, product_number):
         self.serial_number = serial_number
         self.product_number = product_number
