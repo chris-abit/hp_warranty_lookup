@@ -112,6 +112,7 @@ class Computer:
     def url_get(self):
         """
         Use requests to obtain the url for the computer warranty page.
+        Returns self to be friendly for map function.
         """
         warranty_url = "https://support.hp.com/us-en/warrantyresult/"
         headers = {
@@ -128,7 +129,7 @@ class Computer:
         r = requests.get(url, headers=headers, params=params, timeout=5)
         error = self._url_get_error_handle(r)
         if error:
-            return
+            return self
         data = r.json().get("data").get("verifyResponse").get("data")
         product_series = data.get("productSeriesOID")
         target_url = data.get("targetUrl")
@@ -136,6 +137,7 @@ class Computer:
         target_url = f"{warranty_url}{target_url}"
         target_url = target_url.replace("/model/", f"/{product_series}/model/")
         self.url = target_url
+        return self
 
     def _wait_for_warranty(self, driver):
         """
