@@ -52,6 +52,17 @@ class Computer:
         self.url = ""
         self.error = ""
 
+    def __eq__(self, other):
+        """ Compare two computers.
+
+        Two computers are considered identical if both serial and
+        product numbers match.
+        """
+        is_equal = (self.serial_number == other.serial_number
+                    and self.product_number == other.product_number
+        )
+        return is_equal
+
     def _date_read(self, element):
         """ Read a date from a element on the page.
         Returns a date.
