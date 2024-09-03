@@ -13,8 +13,7 @@ WARRANTY_URL = "https://support.hp.com/us-en/check-warranty#multiple"
 
 
 def initialize_browser():
-    """
-    Start selenium browser and load hp warranty page.
+    """ Start selenium browser and load hp warranty page.
     Will accept all cookies.
     """
     fpath = Path(__file__).parent.resolve()
@@ -35,8 +34,7 @@ def initialize_browser():
 
 
 def batch_warranty_get(driver, computers):
-    """
-    Get warranties for computers in batch.
+    """ Get warranties for computers in batch.
     Will filter out any with errors.
     """
     computers = map(lambda x: x.url_get(), computers)
@@ -46,8 +44,7 @@ def batch_warranty_get(driver, computers):
 
 
 def hp_warranty_get():
-    """
-    Retreive warranties for HP computers from hp warranty page.
+    """ Retreive warranties for HP computers from hp warranty page.
     """
     start = time.time()
     output = "hp_warranty_result.csv"
