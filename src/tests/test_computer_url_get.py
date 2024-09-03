@@ -26,7 +26,7 @@ def test_endpoint_is_still_valid():
     """
     serial_number = "HU265BM18V"
     response = url_get(serial_number, "")
-    assert r.ok
+    assert response.ok
 
 
 def test_endpoint_still_has_target_url():
