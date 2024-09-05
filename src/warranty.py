@@ -9,13 +9,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from computer import Computer, computers_read, computers_save
 
 
-WARRANTY_URL = "https://support.hp.com/us-en/check-warranty#multiple"
-
-
 def initialize_browser():
     """ Start selenium browser and load hp warranty page.
     Will accept all cookies.
     """
+    warranty_url = "https://support.hp.com/us-en/check-warranty#multiple"
     fpath = Path(__file__).parent.resolve()
     ublock = fpath / "ublock.xpi"
     errors = [NoSuchElementException, ElementNotInteractableException]
@@ -23,7 +21,7 @@ def initialize_browser():
     driver = Firefox()
     driver.implicitly_wait(4)
     driver.install_addon(ublock)
-    driver.get(WARRANTY_URL)
+    driver.get(warranty_url)
     wait = WebDriverWait(driver, timeout=8, ignored_exceptions=errors)
     wait.until(
         lambda d : driver.find_element(By.ID, cookie_elem).click()
