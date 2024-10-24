@@ -41,20 +41,22 @@ def batch_warranty_get(driver, computers):
         computer.warranty_get(driver)
 
 
-def hp_warranty_get():
+def hp_warranty_get(source="hp_products.csv", target="hp_warranty_result.csv"):
     """ Retreive warranties for HP computers from hp warranty page.
+
+    source: The file containing hp computers.
+    target: Output file for warranty results.
     """
     start = time.time()
-    output = "hp_warranty_result.csv"
     batch_size = 15
     driver = initialize_browser()
-    computers = computers_read()
+    computers = computers_read(source)
     batched_computers = batched(computers, batch_size)
     is_append = False
     print(f"Starting warranty lookup of {len(computers)} computers.")
     for computers in batched_computers:
         batch_warranty_get(driver, computers)
-        computers_save(computers, output, append=is_append)
+        computers_save(computers, target, append=is_append)
         is_append = True
     driver.quit()
     elapsed_time = time.time() - start
@@ -62,4 +64,6 @@ def hp_warranty_get():
 
 
 if __name__ == "__main__":
-    hp_warranty_get()
+    warranty_file = "hp_products-2024-09-05.csv"
+    target = "hp_warranty_result-2024-09-05.csv"
+    hp_warranty_get(warranty_file, target)
