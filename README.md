@@ -15,7 +15,7 @@ To run the script in src\:
 
 This tool relies on the quirky hp warranty page. Thus is prone to all sorts of peculiar failures.
 The results are saved by default to hp_warranty_info.csv and this is per bulk of computers.
-Typical size of 15 computers, as this is the max possible.
+Typical size of 15 computers.
 
 One requirement for this to work is uBlock or any other addon that blocks the feedback
 form that automatically pops up on the HP warranty pages. I found no good workaround
